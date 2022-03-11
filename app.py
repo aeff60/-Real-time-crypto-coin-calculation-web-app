@@ -1,21 +1,19 @@
-import imp
-from urllib3 import response
-from flask import *
-import json
 import os
+from flask import *  
+import json
 from urllib.request import urlopen
 
-app = Flask(__name__)
+from numpy import double, float64
+app  = Flask(__name__)
 
-url_api = "https://api.binance.com/api/v1/ticker/price"
-
-
-@app.route('/')
+@app.route('/', methods=['GET', 'POST'])  
 def home():
-    #read data api
-    response = urlopen(url_api)
+    global selectValuecoinstr, selectValuebalancestr
+    data_jsonsymbol = ""
+    #ที่อยู่ของ API
+    url = "https://api.binance.com/api/v1/ticker/price"
 
-    list_of_symbol = []
+    response = urlopen(url)
 
     data_json = json.loads(response.read())
     data_list = []
@@ -27,18 +25,57 @@ def home():
         else:
             pass
 
+
+    data_list2 = []
+    data_list3 = []
+    for j in range(len(data_list)):
+        datasymbol2 = data_list[j]['symbol']
+        dataprice2 = data_list[j]['price']
+        data_list2.append(datasymbol2)
+        data_list3.append(dataprice2)
+        # dataprice2 = data_list[j]['price']
+
+    listCookie = []
+    totalUsdt = 0.0
+    if request.method == "POST": 
+         selectValuecoin = request.form.get('coin') 
+         selectValuecoinstr = str(selectValuecoin) 
+         print(selectValuecoinstr)
+     
+
+         selectValuebalance = request.form.get('balance') 
+         selectValuebalancestr = str(selectValuebalance)
+         print(selectValuebalancestr)
+        
+        
+         for o in range(len(data_list2)):
+            datasymbol3 = data_list2[o]
+            datasymbol4p = data_list3[o]
+            a2 = datasymbol3.find(selectValuecoinstr)
+            if a2 != -1:
+                price = datasymbol4p
+                
+            else:
+                pass
+
+         listCookie = json.loads(request.cookies.get('symbol'))
+         for item in listCookie:
+             totalUsdt = totalUsdt + item[2]
+
+
+         data_jsonsymbol = double(selectValuebalancestr) * double(price)
+         listCookie.append([selectValuecoinstr, selectValuebalancestr, data_jsonsymbol])
+         #listCookie = str(listCookie)
+                
+    else:
+        selectValuecoinstr = " "
+        selectValuebalancestr = "0"
+    print(listCookie)
+    resp = make_response(render_template('home.html',total = totalUsdt, mycoin=listCookie, data=data_list2, coinsymbol=selectValuecoinstr, valuebalance=selectValuebalancestr, data_jsonsymbol=data_jsonsymbol))
+    resp.set_cookie('symbol',json.dumps(listCookie)) 
+    return resp
+      
     
-
-    for i in range(len(data_json)):
-        coin = data_json[i]['symbol']
-        list_of_symbol.append(coin)
-        coin_USDT = coin.find('USDT')
-
-    print(data_list)
-
-    return render_template('index.html',data = data_json , symbols = list_of_symbol)
-
-
 if __name__ == "__main__":
-    port = int(os.environ.get("PORT", 5001))    
-    app.run(host='127.0.0.1', port=port, debug=True)
+    port = int(os.environ.get("PORT", 5001))
+    app.run(host='0.0.0.0', port=port, debug=True)

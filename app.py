@@ -7,7 +7,7 @@ from urllib.request import urlopen
 
 app = Flask(__name__)
 
-url_api = "0.0.0.0"
+url_api = "https://api.binance.com/api/v1/ticker/price"
 
 
 @app.route('/')
@@ -15,6 +15,11 @@ def home():
     #read data api
     response = urlopen(url_api)
     data_json = json.loads(response.read())
+
+    data_list = []
+    for i in range(len(data_json)):
+        coin = data_json[i]['symbol']
+        coin_USDT = coin.find('USDT')
 
     return render_template('index.html',data = data_json)
 

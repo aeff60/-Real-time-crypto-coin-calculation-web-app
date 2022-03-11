@@ -13,7 +13,6 @@ url_api = "0.0.0.0"
 @app.route('/')
 def home():
     #read data api
-    url_api = "0.0.0.0"
     response = urlopen(url_api)
     data_json = json.loads(response.read())
 

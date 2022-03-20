@@ -8,53 +8,58 @@ app  = Flask(__name__)
 
 @app.route('/', methods=['GET', 'POST'])  
 def home():
-    global selectValuecoinstr, selectValuebalancestr
-    data_jsonsymbol = ""
+
+    global symbol_dropdown_str, balance_str
+    totalprice = ""
+
     #ที่อยู่ของ API
     url = "https://api.binance.com/api/v1/ticker/price"
-
+    
+    #class 'http.client.HTTPResponse'
     response = urlopen(url)
+    data = json.loads(response.read())
 
-    data_json = json.loads(response.read())
-    data_list = []
-    for i in range(len(data_json)):
-        dataprice= data_json[i]['symbol']
-        a = dataprice.find("USDT")
-        if a != -1:
-            data_list.append(data_json[i])
+    data_onlyusdt = []
+
+    #สร้างลูปสำหรับเอาเฉพาะตัวย่อของการแลกเปลี่ยนเงิน
+    for i in range(len(data)):
+        symbol= data[i]['symbol']# ['symbol'] คือ key ที่อยู่ใน API
+        findusdt = symbol.find("USDT") #หาว่าใน key ที่ชื่อ symbol มีตัวอักษร usdt หรือไม่
+        if findusdt != -1: #ถ้าเจอค่าจะไม่เท่ากับ -1
+            data_onlyusdt.append(data[i]) #เอาข้อมูลที่ symbol มีคำว่า usdt เก็บไว้ใน list ชื่อ data_onlyusdt
         else:
             pass
 
 
-    data_list2 = []
-    data_list3 = []
-    for j in range(len(data_list)):
-        datasymbol2 = data_list[j]['symbol']
-        dataprice2 = data_list[j]['price']
-        data_list2.append(datasymbol2)
-        data_list3.append(dataprice2)
-        # dataprice2 = data_list[j]['price']
+    #แยกข้อมูลของแต่ละ key ไว้ใน list เดียวกัน
+    symbol_usdt_lsit = []
+    price_usdt_lsit = []
 
+    for j in range(len(data_onlyusdt)):
+        symbol_onlyusdt = data_onlyusdt[j]['symbol']
+        price_onlyusdt = data_onlyusdt[j]['price']
+        symbol_usdt_lsit.append(symbol_onlyusdt)
+        price_usdt_lsit.append(price_onlyusdt)
+        
+    #เริ่มต้นใช้ Cookie    
     listCookie = []
     totalUsdt = 0.0
-    if request.method == "POST": 
-         selectValuecoin = request.form.get('coin') 
-         selectValuecoinstr = str(selectValuecoin) 
-         print(selectValuecoinstr)
-     
 
-         selectValuebalance = request.form.get('balance') 
-         selectValuebalancestr = str(selectValuebalance)
-         print(selectValuebalancestr)
+
+    if request.method == "POST": 
+         #รับค่าจากฟอร์มที่ชื่อว่า symbol
+         symbol_dropdown = request.form.get('coin')
+         symbol_dropdown_str = str(symbol_dropdown) 
+     
+         balance = request.form.get('balance') 
+         balance_str = str(balance)
         
-        
-         for o in range(len(data_list2)):
-            datasymbol3 = data_list2[o]
-            datasymbol4p = data_list3[o]
-            a2 = datasymbol3.find(selectValuecoinstr)
-            if a2 != -1:
-                price = datasymbol4p
-                
+         for k in range(len(symbol_usdt_lsit)):
+            symbol_selected = symbol_usdt_lsit[k]
+            prince_current = price_usdt_lsit[k]
+            check_symbol_selected = symbol_selected.find(symbol_dropdown_str)
+            if check_symbol_selected != -1:
+                price = prince_current    
             else:
                 pass
 
@@ -62,16 +67,14 @@ def home():
          for item in listCookie:
              totalUsdt = totalUsdt + item[2]
 
-
-         data_jsonsymbol = double(selectValuebalancestr) * double(price)
-         listCookie.append([selectValuecoinstr, selectValuebalancestr, data_jsonsymbol])
-         #listCookie = str(listCookie)
+         totalprice = double(balance_str) * double(price)
+         listCookie.append([symbol_dropdown_str, balance_str, totalprice])
                 
     else:
-        selectValuecoinstr = " "
-        selectValuebalancestr = "0"
-    print(listCookie)
-    resp = make_response(render_template('home.html',total = totalUsdt, mycoin=listCookie, data=data_list2, coinsymbol=selectValuecoinstr, valuebalance=selectValuebalancestr, data_jsonsymbol=data_jsonsymbol))
+        symbol_dropdown_str = " "
+        balance_str = "0"
+        
+    resp = make_response(render_template('home.html',total = totalUsdt, mycoin=listCookie, data=symbol_usdt_lsit, coinsymbol=symbol_dropdown_str, valuebalance=balance_str))
     resp.set_cookie('symbol',json.dumps(listCookie)) 
     return resp
       

@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+
+    <meta charset="UTF-8">
+    <title> Home </title>
+    <link rel="stylesheet" href="{{ url_for ('static', filename='css/style.css') }}" >
+</head>
+<body>
+<div class="header">
+    <h1> ยอดเงินของฉัน</h1>
+</div>
+
+<div class="content">
+
+  <form method = "post" action="">  
+
+        <select name="coin" id="coin">
+          {% for item in data %}
+          <option name="symbol"> {{item}} </option>
+          {% endfor %}
+        </select>
+          &nbsp;<input type="text" id="balance" name="balance"> <input type="Submit" value="Add" id="button">
+      </form>
+</div>
+</body>
+</html> 
